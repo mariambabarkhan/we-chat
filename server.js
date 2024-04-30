@@ -42,10 +42,13 @@ app.post('/submit-login', (req, res) => {
         }
         
         updateUserStatusAndNotify(username, 'active');
-        res.status(200).send(response.success);
+        // redirect to options page with username
+        res.status(200).send("Login successful");
+
     }
 
 });
+
 
 app.post('/submit-signup', (req, res) => {
     const username = req.body.username;
@@ -115,7 +118,9 @@ function checkUserInJSON(user) {
 
 function updateUserStatusAndNotify(username, status) {
     if (status === 'active') {
-        activeUsers.push(username);
+        if (!activeUsers.includes(username)){
+            activeUsers.push(username);
+        }
     } else {
         activeUsers = activeUsers.filter(user => user !== username);
     }

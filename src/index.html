@@ -67,7 +67,6 @@
 
 <script>
   function scroller(){
-    console.log(1)
     window.scrollTo(0,document.getElementById('login').offsetTop)
   }
 
@@ -87,7 +86,7 @@
         body: JSON.stringify(formData)
     });
     if (response.ok) {
-        window.location.href = '/options.html';
+        window.location.href = '/options.html?username=' + formData.username;
     } else {
         const errorMessage = await response.text();
         document.getElementById('error-message').textContent = errorMessage;

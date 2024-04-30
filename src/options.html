@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="bootstrap/bootstrap.min.css">
   <link rel="stylesheet" href="css/app.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
-  <link href="lib/css/emoji.css" rel="stylesheet">
 </head>
+<script src='/socket.io/socket.io.js'></script>
 
 
 <body>
@@ -41,14 +41,12 @@
                 
                         <div class="d-flex align-items-center ">
 
-                            <i class="emoji-picker-container" style="width: 100%; font-style: normal;">
-                                <input type="text" class="form" id="text-input" placeholder="Type a message" data-emojiable="true">
-                                <button class="svgBtn btn" id="SendBtn" onclick="sendMessage()">
-                                </i>
+                                <input type="text" class="form hidden-true" id="text-input" placeholder="Type a message">
+                                <button class="svgBtn hidden-true btn" id="SendBtn" onclick="sendMessage()">
                             <svg xmlns="http://www.w3.org/2000/svg" id="svg1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m.172,3.708C-.216,2.646.076,1.47.917.713,1.756-.041,2.951-.211,3.965.282l18.09,8.444c.97.454,1.664,1.283,1.945,2.273H4.048L.229,3.835c-.021-.041-.04-.084-.057-.127Zm3.89,9.292L.309,20.175c-.021.04-.039.08-.054.122-.387,1.063-.092,2.237.749,2.993.521.467,1.179.708,1.841.708.409,0,.819-.092,1.201-.279l18.011-8.438c.973-.456,1.666-1.288,1.945-2.28H4.062Z"/></svg>
                             </button>
                         </div>
-                
+                        
                 </div>
             </div>
         </div>
@@ -59,15 +57,38 @@
 
 </body>
 <script src="js/nav.js"></script>
+<script src="js/rtc.js"></script>
 <script src="bootstrap/bootstrap.bundle.js"></script>
 <script src="bootstrap/bootstrap.bundle.min.js"></script>
 <script>
 
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    };
+    
+    fetchActiveUsers();
+    var me = getUrlParameter('username');
+    
+    document.querySelectorAll(".hidden-true").forEach((element) => {
+        element.hidden = true;
+    });
+
     function updateUsers(users){
+
+    if (!users.includes(me)) {
+        window.location.href = 'index.html';
+    }
+
     chatslistarea = document.querySelector('.chatslistarea');
     chatslistarea.innerHTML = '';
     for (let i = 0; i < users.length; i++) { 
         const element = users[i];
+        if (element === me) {
+            continue;
+        }
         const div = document.createElement('div');
         div.classList.add('d-flex', 'align-items-center', 'border-bottom', 'chatlistitem');
         div.innerHTML = `
@@ -76,7 +97,12 @@
             <span class='active'></span>
         `;
         div.addEventListener('click', () => {
+            document.querySelectorAll(".hidden-true").forEach((element) => {
+                element.hidden = false;
+            });
+
             document.getElementById('username').innerText = element;
+            establishConnection();
         });
         chatslistarea.appendChild(div);
         }   
@@ -101,13 +127,10 @@
                     <div class='date mt-3'>${new Date().toLocaleTimeString()}</div>
                     </div>
                 </span>
-        `
-        input.value = '';
+        `        
         document.querySelector('.chatbox').scrollTo(0, document.querySelector('.chatbox').scrollHeight);
     }
 
-
-    // active users
 
     function fetchActiveUsers() {
             fetch('/active-users')
@@ -122,11 +145,9 @@
                 })
             .catch(error => {
                 console.error(error);
-                // Handle error 
             });
         }
-    fetchActiveUsers();
-    setInterval(fetchActiveUsers, 30000);
+    setInterval(fetchActiveUsers, 1000);
 
 </script>
 </html>

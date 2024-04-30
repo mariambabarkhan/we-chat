@@ -1,9 +1,11 @@
-import helpers from './helpers.js';
+// import helpers from './helpers.js';
 
 window.addEventListener('load', () => {
     //When the 'Create room" is button is clicked
+    
     document.getElementById('create-room').addEventListener('click', (e) => {
-        e.preventDefault();
+
+
 
         let roomName = document.querySelector('#room-name').value;
         let yourName = document.querySelector('#your-name').value;
