@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+
+
+<body>
+  <div class="c1">
+      <div class="container pb-4">
+          <div class="row">
+              <nav class="navbar navbar-expand-lg"></nav>
+          </div>
+      </div>
+      
+      <section class="section d-flex justify-content-center align-items-center" id="signup">
+        <div class='container'>
+          <div class='row py-4 vertical-center'>
+              <div class="col-md-5 login">
+                  <a href="/index.html" class=' my-3 text-muted'> Back</a>
+                <form action="/submit-signup" method='post' id="signup-form">
+                  <h3 class='text-center mt-3'>Hey, Hello👋</h3>
+                  <p class='text-muted text-center'>Signup to Wechat</p>
+                  <label for='name' class='mt-3' for='name'>Username</label>
+                  <input type='text' name='username' class='form-control' required />
+                  <label class='mt-3' for='password'>Email</label>
+                  <input name='email' type="email" class="form-control mb-2" required>
+                  <label class='mt-3' for='password'>Password</label>
+                  <input name='password' type="password" class="form-control mb-2" required>
+                  <div id="error-message" class="text-center my-2 text-danger" style="display: none;"></div>
+                  
+                  <div class="text-center my-3">
+                    <button class=' green-button'>Save</button>
+                 </div>
+                </form>
+              </div>
+          </div>
+        </div>
+      </section>
+      
+  <footer></footer>
+  </div>
+  
+</body>
+
+<script>
+  function scroller(){
+    console.log(1)
+    window.scrollTo(0,document.getElementById('login').offsetTop)
+  }
+
+
+  document.getElementById('signup-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = {
+        username: event.target.username.value,
+        password: event.target.password.value,
+        email: event.target.email.value
+    };
+
+    const response = await fetch('/submit-signup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    });
+    if (response.ok) {
+        window.location.href = '/index.html';
+    } else {
+        const errorMessage = await response.text();
+        document.getElementById('error-message').textContent = errorMessage;
+        document.getElementById('error-message').style.display = 'block';
+    }
+});
+
+
+</script>
+<script src="js/nav.js"></script>
+<script src="bootstrap/bootstrap.bundle.js"></script>
+<script src="bootstrap/bootstrap.bundle.min.js"></script>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+
+
+<body>
+  <div class="c1">
+      <div class="container pb-4">
+          <div class="row">
+              <nav class="navbar navbar-expand-lg"></nav>
+          </div>
+      </div>
+      
+      <section class="section container mb-4  ">
+          <div class="row">
+            <div class="col-md-5 d-flex align-items-center justify-content-center">
+              <img src="images/phone.png" alt="img" class="phone img-fluid">
+            </div>
+            <div class="col-md-7">
+              <div class="d-flex align-items-center h-100 vertical-center my-5">
+                <h1 class="text-center fw-bold">The Ultimate chatting experience</h1>
+                <h4 class="text-center">Just a browser tap away!</h3>
+                <button onclick="scroller()"
+                class="btn green-button ">Get Started</button>
+              </div>
+            </div>
+          </div>
+      </section>
+
+      
+      <section class="section d-flex justify-content-center align-items-center" id="login">
+        <div class='container'>
+          <div class='row py-4 vertical-center'>
+              <div class="col-md-5 login">
+                <form action="/submit-login" method='post' id="login-form">
+                  <h3 class='text-center mt-3'>Welcome👋</h3>
+                  <p class='text-muted text-center'>Login to Wechat</p>
+                  <label for='name' class='mt-3' for='name'>Username</label>
+                  <input type='text' name='username' class='form' required />
+                  <label class='mt-3' for='password'>Password</label>
+                  <input name='password' type="password" class="form mb-2" required>
+                  <div id="error-message" class="text-center my-2 text-danger" style="display: none;"></div>
+                  <div class="text-center">Dont have an account?
+                    <a href="/signup.html" class=' my-3 text-muted'> Sign up</a>
+                  </div>
+                  
+                  <div class="text-center my-3">
+                    <button class=' green-button'>Login</button>
+                 </div>
+                </form>
+              </div>
+          </div>
+        </div>
+      </section>
+      
+  <footer></footer>
+  </div>
+  
+</body>
+
+<script>
+  function scroller(){
+    console.log(1)
+    window.scrollTo(0,document.getElementById('login').offsetTop)
+  }
+
+
+  document.getElementById('login-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = {
+        username: event.target.username.value,
+        password: event.target.password.value
+    };
+
+    const response = await fetch('/submit-login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    });
+    if (response.ok) {
+        window.location.href = '/options.html';
+    } else {
+        const errorMessage = await response.text();
+        document.getElementById('error-message').textContent = errorMessage;
+        document.getElementById('error-message').style.display = 'block';
+    }
+});
+
+
+</script>
+<script src="js/nav.js"></script>
+<script src="bootstrap/bootstrap.bundle.js"></script>
+<script src="bootstrap/bootstrap.bundle.min.js"></script>
+</html>
