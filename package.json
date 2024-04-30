@@ -1,0 +1,21 @@
+{
+  "name": "livestream-server",
+  "version": "0.0.1",
+  "description": "A conference call implementation using WebRTC, Socket.io and Node.js.",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "serve-favicon": "^2.5.0",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  },
+  "scripts": {
+    "devstart": "nodemon server.js"
+  },
+  "keywords": [
+    "LiveStream",
+    "Server"
+  ]
+}
