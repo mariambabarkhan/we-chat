@@ -1,75 +1,83 @@
-export default {
-    generateRandomString() {
-        const crypto = window.crypto || window.msCrypto;
-        let array = new Uint32Array(1);
-        
-        return crypto.getRandomValues(array);
-    },
+let mediaRecorder; // Global variable to hold the MediaRecorder instance
+let recordedChunks = []; // Array to store recorded audio chunks
+let isRecording = false; // Variable to track recording state
 
-    pageHasFocus() {
-        return !( document.hidden || document.onfocusout || window.onpagehide || window.onblur );
-    },
+function startRecording() {
+    // Check if MediaRecorder is supported by the browser
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('MediaRecorder is not supported by your browser.');
+        return;
+    }
 
+    if (!isRecording) {
+        // Define constraints for media stream (audio only)
+        const constraints = { audio: true };
 
-    getQString( url = '', keyToReturn = '' ) {
-        url = url ? url : location.href;
-        let queryStrings = decodeURIComponent( url ).split( '#', 2 )[0].split( '?', 2 )[1];
+        // Request permission to access the user's microphone
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                // Create a new MediaRecorder instance with the stream
+                mediaRecorder = new MediaRecorder(stream);
 
-        if ( queryStrings ) {
-            let splittedQStrings = queryStrings.split( '&' );
+                // Event handler for dataavailable event
+                mediaRecorder.ondataavailable = event => {
+                    recordedChunks.push(event.data); // Store recorded audio chunks
+                };
 
-            if ( splittedQStrings.length ) {
-                let queryStringObj = {};
+                // Event handler for stop event
+                mediaRecorder.onstop = () => {
+                    // Combine recorded chunks into a single Blob
+                    const recordedBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    // Reset recordedChunks array
+                    recordedChunks = [];
 
-                splittedQStrings.forEach( function ( keyValuePair ) {
-                    let keyValue = keyValuePair.split( '=', 2 );
+                    console.log('Recorded Blob:', recordedBlob);
+                    // Handle the recorded audio Blob (e.g., send to server)
+                    handleRecordedAudio(recordedBlob);
+                    
+                    // write audio msg to chat
+                    const audioUrl = URL.createObjectURL(recordedBlob);
+                    document.querySelector('.chatbox').innerHTML += `
+                        <div class='d-flex align-items-center text-end'>
+                            <span class='textmsg d-flex justify-content-center align-items-center'>
+                                <audio controls>
+                                    <source src="${audioUrl}" type="audio/webm">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                <div class='date mt-3'>${new Date().toLocaleTimeString()}</div>
+                            </span>
+                        </div>
+                    `;
+                    document.querySelector('.chatbox').scrollTo(0, document.querySelector('.chatbox').scrollHeight);
 
-                    if ( keyValue.length ) {
-                        queryStringObj[keyValue[0]] = keyValue[1];
-                    }
-                } );
+                };
 
-                return keyToReturn ? ( queryStringObj[keyToReturn] ? queryStringObj[keyToReturn] : null ) : queryStringObj;
-            }
+                // Start recording
+                mediaRecorder.start();
+                isRecording = true;
+            })
+            .catch(error => {
+                console.error('Error accessing user media:', error);
+            });
+    } else {
+        stopRecording();
+    }
+}
 
-            return null;
-        }
-        return null;
-    },
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        isRecording = false;
+        mediaRecorder.stream.getTracks().forEach(track => track.stop()); // Release the microphone stream
+        mediaRecorder = null; // Release the MediaRecorder instance
+    }
+}
 
-    addChat( data, senderType ) {
-        let chatMsgDiv = document.querySelector( '#chat-messages' );
-        let contentAlign = 'justify-content-end';
-        let senderName = 'You';
-        let msgBg = 'bg-white';
-        if ( senderType === 'remote' ) {
-            contentAlign = 'justify-content-start';
-            senderName = data.sender;
-            msgBg = '';
-        }
-
-        let infoDiv = document.createElement( 'div' );
-        infoDiv.className = 'sender-info';
-        infoDiv.innerHTML = `${ senderName } - ${ moment().format( 'Do MMMM, YYYY h:mm a' ) }`;
-
-        let colDiv = document.createElement( 'div' );
-        colDiv.className = `card chat-card msg ${ msgBg }`;
-        colDiv.innerHTML = xssFilters.inHTMLData( data.msg ).autoLink( { target: "_blank", rel: "nofollow"});
-
-        let rowDiv = document.createElement( 'div' );
-        rowDiv.className = `row ${ contentAlign } mb-2`;
-
-        colDiv.appendChild( infoDiv );
-        rowDiv.appendChild( colDiv );
-        chatMsgDiv.appendChild( rowDiv );
-        
-        /**
-         * Move focus to the newly added message but only if:
-         * 1. Page has focus
-         * 2. User has not moved scrollbar upward. This is to prevent moving the scroll position if user is reading previous messages.
-         */
-        if ( this.pageHasFocus ) {
-            rowDiv.scrollIntoView();
-        }
-    },
-};
+function handleRecordedAudio(blob) {
+    socket = io('/stream');
+    socket.emit('chat', {
+        msg: blob,
+        reciever: reciever,
+        sender: sender
+    });
+}

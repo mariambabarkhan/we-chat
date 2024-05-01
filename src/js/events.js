@@ -1,59 +1,19 @@
-// import helpers from './helpers.js';
+const fs = require('fs');
 
-window.addEventListener('load', () => {
-    //When the 'Create room" is button is clicked
-    
-    document.getElementById('create-room').addEventListener('click', (e) => {
+// Define the saveMessage function
+function saveMessage(sender, receiver, message) {
+    if (!fs.existsSync('messages.json')) {
+        fs.writeFileSync('messages.json', '[]');
+    }
 
+    const messageData = [sender, receiver, message, new Date().toISOString()];
+    let messages = JSON.parse(fs.readFileSync('messages.json'));
 
+    messages.push(messageData);
 
-        let roomName = document.querySelector('#room-name').value;
-        let yourName = document.querySelector('#your-name').value;
+    // Write updated messages array back to JSON file
+    fs.writeFileSync('messages.json', JSON.stringify(messages, null, 2));
+}
 
-        if (roomName && yourName) {
-            //remove error message, if any
-            document.querySelector('#err-msg').innerHTML = "";
-
-            //save the user's name in sessionStorage
-            sessionStorage.setItem('username', yourName);
-
-            //create room link
-            let roomLink = `${location.origin + '/message.html'}?room=${roomName.trim().replace(' ', '_')}_${helpers.generateRandomString()}`;
-
-            //show message with link to room
-            document.querySelector('#room-created').innerHTML = `Room successfully created. Click <a href='${roomLink}'>here</a> to enter room. 
-                Share the room link with your partners.`;
-
-            //empty the values
-            document.querySelector('#room-name').value = '';
-            document.querySelector('#your-name').value = '';
-        }
-
-        else {
-            document.querySelector('#err-msg').innerHTML = "All fields are required";
-        }
-    });
-
-
-    //When the 'Enter room' button is clicked.
-    document.getElementById('enter-room').addEventListener('click', (e) => {
-        e.preventDefault();
-
-        let name = document.querySelector('#username').value;
-
-        if (name) {
-            //remove error message, if any
-            document.querySelector('#err-msg-username').innerHTML = "";
-
-            //save the user's name in sessionStorage
-            sessionStorage.setItem('username', name);
-
-            //reload room
-            location.reload();
-        }
-
-        else {
-            document.querySelector('#err-msg-username').innerHTML = "Please input your name";
-        }
-    });
-});
+// Export the saveMessage function
+module.exports = saveMessage;

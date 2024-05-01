@@ -146,3 +146,36 @@ app.post('/update-user-status', (req, res) => {
     res.sendStatus(200);
 });
 
+
+function getChatHistory(sender, receiver) {
+    // Read existing messages from JSON file
+    let messages = [];
+    if (fs.existsSync('messages.json')) {
+        messages = JSON.parse(fs.readFileSync('messages.json'));
+    }
+    // Filter messages for the given sender and receiver
+    const chatHistory = messages.filter(message =>
+        (message[0] === sender && message[1] === receiver) ||
+        (message[0] === receiver && message[1] === sender)
+    );
+
+    // Sort chat history by timestamp
+    chatHistory.sort((a, b) => new Date(a[3]) - new Date(b[3]));
+
+    // Extract message content and timestamp, and return as a list
+    const formattedChat = chatHistory.map(message => ({
+        sender : message[0],
+        chat: message[2],
+        timestamp: message[3]
+    }));
+    return formattedChat;
+}
+
+
+app.post('/chat', (req, res) => {
+    const { sender, receiver } = req.body;
+    const messages = getChatHistory(sender, receiver);
+    res.json({ messages });
+});
+
+ 

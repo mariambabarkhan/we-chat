@@ -275,6 +275,14 @@ html{
     height: 20px;
   }
   
+  #svg2{
+    transition: all .2s ease-in-out;
+    fill: white;
+    margin-bottom: 6px;
+    margin-left: -2px;
+    height: 20px;
+  }
+
 .phone{
   width: 70%;
   margin-top: 10%;
@@ -407,7 +415,7 @@ html{
 
 .date2{
   font-size: 10px;
-  color: #7e7e7e;
+  color: #5c5c5c;
 }
 
 #emojisvg{
@@ -427,4 +435,15 @@ html{
   position: absolute;
   bottom: 50px;
   left: -200px;
+}
+
+
+.newmsg{
+  background-color: #c2e1d8;
+  color: #000;
+}
+
+.currentuser{
+  background-color: #dfdfdf;
+  color: #000;
 }

@@ -1,3 +1,5 @@
+const saveMessage = require('./events.js');
+
 const stream = (socket) => {
     socket.on('subscribe', (data) => {
         socket.join(data.sender);
@@ -5,7 +7,11 @@ const stream = (socket) => {
     });
 
     socket.on('chat', (data) => {
-        socket.to(data.reciever).emit('chat', { reciever: data.reciever, msg: data.msg });
+        if (data.msg != '' & data.msg != null) {
+            saveMessage(data.sender, data.reciever, data.msg);
+
+            socket.to(data.reciever).emit('chatback', { reciever: data.reciever, msg: data.msg, sender: data.sender});
+        }
     });
 };
 
