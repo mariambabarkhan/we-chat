@@ -21,11 +21,11 @@ function establishConnection() {
         document.getElementById('SendBtn').addEventListener('click', (e) => {
             e.preventDefault();
             var msg = document.getElementById('text-input').value;
-
             socket.emit('chat', {
                 msg: msg,
                 reciever: reciever,
-                sender: sender
+                sender: sender,
+                type: 0
             });
             document.getElementById('text-input').value = '';
         });
@@ -49,11 +49,16 @@ function addChat(msg, sender, reciever) {
             <div class='d-flex align-items-center text-start'>
             <span class='rcvmsg d-flex justify-content-center align-items-center'>
             <audio controls>
-            <source src="${audioUrl}" type="audio/webm">
+            <source src="${audioUrl}"  type="audio/webm">
             Your browser does not support the audio element.
             </audio>
             <div class='date2 mt-3'>${new Date().toLocaleTimeString()}</div>
             </span>
+            </div>
+
+            <div class='d-flex align-items-center text-start'>
+            <span onclick="transcribeData('$')" class='rcvbtn d-flex justify-content-center align-items-center'>
+            Transcribe</span>
             </div>
             `
 
@@ -226,22 +231,34 @@ fetch('/chat', {
     document.querySelector('.chatbox').innerHTML = '';
     for (let i = 0; i < messages.length; i++) {
         const message = messages[i];
+        console.log(message)
         if (message.sender === sender) { // Check if the sender matches the receiver
             // check if blob
-            if (message.chat.type === 'Buffer') {
-                const audioBlob = new Blob([new Uint8Array(message.chat.data)], { type: 'audio/webm' });
+            if (message.type === 'audio') {
+                // decode the audio data
+                audio = new Uint8Array(message.chat);
+                audio = new TextDecoder().decode(audio);
+                const audioBlob = new Blob([new Uint8Array(audio)], { type: 'audio/webm' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                     document.querySelector('.chatbox').innerHTML += `
                     <div class='d-flex align-items-center text-end'>
                     <span class='textmsg d-flex justify-content-center align-items-center'>
                     <audio controls>
-                    <source src="${audioUrl}" type="audio/webm">
+                    <source id="${message.chat}" type="audio/webm">
                     Your browser does not support the audio element.
                     </audio>
                     <div class='date mt-3'>${new Date(message.timestamp).toLocaleTimeString()}</div>
                     </span>
                     </div>
+
+                    <div class='d-flex align-items-center text-end'>
+                    <span onclick="transcribeData('$')" class='textbtn d-flex justify-content-center align-items-center'>
+                    Transcribe</span>
+                    </div>
                     `;
+                document.getElementById(message.chat).src = "/audiofile/" + message.chat + ".wav";
+
+
                     document.querySelector('.chatbox').scrollTo(0, document.querySelector('.chatbox').scrollHeight);
             } else{
 
@@ -255,20 +272,29 @@ fetch('/chat', {
                 `;
             }
         } else {
-            if (message.chat.type === 'Buffer') {
-                const audioBlob = new Blob([new Uint8Array(message.chat.data)], { type: 'audio/webm' });
+            if (message.type === 'audio') {
+                audio = new Uint8Array(message.chat);
+                audio = new TextDecoder().decode(audio);
+                const audioBlob = new Blob([new Uint8Array(audio)], { type: 'audio/webm' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                     document.querySelector('.chatbox').innerHTML += `
                     <div class='d-flex align-items-center text-start'>
                     <span class='rcvmsg d-flex justify-content-center align-items-center'>
                     <audio controls>
-                    <source src="${audioUrl}" type="audio/webm">
+                    <source id="${message.chat}" type="audio/webm">
                     Your browser does not support the audio element.
                     </audio>
                     <div class='date2 mt-3'>${new Date(message.timestamp).toLocaleTimeString()}</div>
                     </span>
                     </div>
+
+                    <div class='d-flex align-items-center text-start'>
+                    <span onclick="transcribeData('$')" class='rcvbtn d-flex justify-content-center align-items-center'>
+                    Transcribe</span>
+                    </div>
                     `;
+                    document.getElementById(message.chat).src = "/audiofile/" + message.chat + ".wav";
+
                     document.querySelector('.chatbox').scrollTo(0, document.querySelector('.chatbox').scrollHeight);
             } else{
             document.querySelector('.chatbox').innerHTML += `
@@ -289,3 +315,26 @@ fetch('/chat', {
 });
 }
 
+function transcribeData(buffer) {
+    fetch('/transcribe', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            audio: buffer
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to transcribe audio');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+    })
+    .catch(error => {
+        console.error(error);
+    });
+}

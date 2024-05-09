@@ -7,6 +7,11 @@ let stream = require( './src/js/stream' );
 let path = require( 'path' );
 let favicon = require( 'serve-favicon' );
 
+let transcribe = require('./src/js/trans.js');
+const { type } = require('os');
+
+app.use('/audiofile', express.static('src/audio'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -98,6 +103,8 @@ function addUserToJSON(user) {
 }
 
 
+
+
 function checkUserInJSON(user) {
     if (fs.existsSync('Users.json')) {
         const usersData = JSON.parse(fs.readFileSync('Users.json'));
@@ -146,31 +153,63 @@ app.post('/update-user-status', (req, res) => {
     res.sendStatus(200);
 });
 
-
 function getChatHistory(sender, receiver) {
     // Read existing messages from JSON file
-    let messages = [];
     if (fs.existsSync('messages.json')) {
         messages = JSON.parse(fs.readFileSync('messages.json'));
     }
-    // Filter messages for the given sender and receiver
     const chatHistory = messages.filter(message =>
         (message[0] === sender && message[1] === receiver) ||
         (message[0] === receiver && message[1] === sender)
     );
 
     // Sort chat history by timestamp
-    chatHistory.sort((a, b) => new Date(a[3]) - new Date(b[3]));
+    chatHistory.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     // Extract message content and timestamp, and return as a list
-    const formattedChat = chatHistory.map(message => ({
-        sender : message[0],
-        chat: message[2],
-        timestamp: message[3]
-    }));
+    const formattedChat = chatHistory.map(message => {
+        if (message[4] == 0) {
+            // Text message
+            return {
+                sender: message[0],
+                chat: message[2],
+                timestamp: message[3],
+                type: 'text'
+            };
+        } else  { 
+
+              return {
+                sender: message[0],
+                chat: message[2],
+                timestamp: message[3],
+                type: 'audio'
+            };
+            
+
+            // Audio file
+            const audioFilePath = path.join('src/audio/', message[2] + '.wav'); // Assuming audio files are stored in 'src/audio' folder with extension '.wav
+            if (fs.existsSync(audioFilePath)) {
+                // Read audio file content
+                const audioContent = fs.readFileSync(audioFilePath, 'utf8'); // Assuming audio file content can be read as text
+                return {
+                    sender: message[0],
+                    chat: audioContent,
+                    type: 'audio',
+                    timestamp: message[3]
+                };
+            } else {
+                // Audio file not found
+                return {
+                    sender: message[0],
+                    chat: 'Audio file not found',
+                    type: 'audio',
+                    timestamp: message[3]
+                };
+            }
+        }
+    });
     return formattedChat;
 }
-
 
 app.post('/chat', (req, res) => {
     const { sender, receiver } = req.body;
@@ -179,3 +218,50 @@ app.post('/chat', (req, res) => {
 });
 
  
+app.post('/transcribe', (req, res) => {
+
+    // incoming message.chat is buffer object
+    const filePath = 'audio.wav';
+    saveBufferToWav(req.body.audio, 44100, 1, 16, filePath);
+
+
+    data = transcribe(req.body.audio);
+    console.log(data);
+    res.send(data);
+});
+
+
+
+
+function generateWavHeader(sampleRate, numChannels, bitsPerSample, dataLength) {
+    const header = Buffer.alloc(44);
+  
+    // RIFF chunk descriptor
+    header.write('RIFF', 0);
+    header.writeUInt32LE(36 + dataLength, 4); // File size - 8 (36 bytes for format)
+    header.write('WAVE', 8);
+
+    // Format chunk
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16); // Length of format chunk (16 bytes)
+    header.writeUInt16LE(1, 20); // PCM format
+    header.writeUInt16LE(numChannels, 22);
+    header.writeUInt32LE(sampleRate, 24);
+    header.writeUInt32LE(sampleRate * numChannels * (bitsPerSample / 8), 28); // Byte rate
+    header.writeUInt16LE(numChannels * (bitsPerSample / 8), 32); // Block align
+    header.writeUInt16LE(bitsPerSample, 34);
+
+    // Data chunk
+    header.write('data', 36);
+    header.writeUInt32LE(dataLength, 40); // Data length
+
+    return header;
+}
+
+function saveBufferToWav(bufferArray, sampleRate, numChannels, bitsPerSample, filePath) {
+    const dataLength = bufferArray.length;
+    const header = generateWavHeader(sampleRate, numChannels, bitsPerSample, dataLength);
+    const wavBuffer = Buffer.concat([header, bufferArray]);
+
+    fs.writeFileSync(filePath, wavBuffer);
+}

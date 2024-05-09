@@ -39,13 +39,18 @@ function startRecording() {
                     const audioUrl = URL.createObjectURL(recordedBlob);
                     document.querySelector('.chatbox').innerHTML += `
                         <div class='d-flex align-items-center text-end'>
-                            <span class='textmsg d-flex justify-content-center align-items-center'>
-                                <audio controls>
-                                    <source src="${audioUrl}" type="audio/webm">
-                                    Your browser does not support the audio element.
-                                </audio>
-                                <div class='date mt-3'>${new Date().toLocaleTimeString()}</div>
-                            </span>
+                        <span class='textmsg d-flex justify-content-center align-items-center'>
+                        <audio controls>
+                        <source id="${audioUrl}" type="audio/webm">
+                        Your browser does not support the audio element.
+                        </audio>
+                        <div class='date mt-3'>${new Date().toLocaleTimeString()}</div>
+                        </span>
+                        </div>
+                        
+                        <div class='d-flex align-items-center text-end'>
+                        <span onclick="transcribeData('$')" class='textbtn d-flex justify-content-center align-items-center'>
+                        Transcribe</span>
                         </div>
                     `;
                     document.querySelector('.chatbox').scrollTo(0, document.querySelector('.chatbox').scrollHeight);
@@ -78,6 +83,7 @@ function handleRecordedAudio(blob) {
     socket.emit('chat', {
         msg: blob,
         reciever: reciever,
-        sender: sender
+        sender: sender,
+        type:1
     });
 }

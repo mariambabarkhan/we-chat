@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Transcription</title>
+</head>
+<body>
+    <h1>Speech Transcription</h1>
+    <input type="file" id="audioFileInput">
+    <button onclick="transcribeAudio()">Transcribe</button>
+    <div id="transcriptionResult"></div>
+
+    <script>
+        function transcribeAudio() {
+            const audioFileInput = document.getElementById('audioFileInput');
+            const audioFile = audioFileInput.files[0];
+
+            if (!audioFile) {
+                alert('Please select an audio file.');
+                return;
+            }
+
+            const recognizer = new window.webkitSpeechRecognition();
+            recognizer.lang = 'en-US';
+
+            recognizer.onresult = function(event) {
+                const transcriptionResult = event.results[0][0].transcript;
+                document.getElementById('transcriptionResult').innerText = transcriptionResult;
+            }
+
+            recognizer.onerror = function(event) {
+                console.error('Error occurred during transcription:', event.error);
+            }
+
+            const audioBlob = new Blob([audioFile], { type: 'audio/wav' });
+            const audioURL = URL.createObjectURL(audioBlob);
+
+            const audio = new Audio(audioURL);
+            audio.play().then(() => {
+                recognizer.start();
+            }).catch(error => {
+                console.error('Error occurred while playing audio:', error);
+            });
+        }
+    </script>
+</body>
+</html>
