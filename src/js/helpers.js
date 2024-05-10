@@ -41,7 +41,7 @@ function startRecording() {
                         <div class='d-flex align-items-center text-end'>
                         <span class='textmsg d-flex justify-content-center align-items-center'>
                         <audio controls>
-                        <source id="${audioUrl}" type="audio/webm">
+                        <source src="${audioUrl}" type="audio/webm">
                         Your browser does not support the audio element.
                         </audio>
                         <div class='date mt-3'>${new Date().toLocaleTimeString()}</div>

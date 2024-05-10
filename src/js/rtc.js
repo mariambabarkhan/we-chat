@@ -231,7 +231,6 @@ fetch('/chat', {
     document.querySelector('.chatbox').innerHTML = '';
     for (let i = 0; i < messages.length; i++) {
         const message = messages[i];
-        console.log(message)
         if (message.sender === sender) { // Check if the sender matches the receiver
             // check if blob
             if (message.type === 'audio') {
@@ -252,7 +251,7 @@ fetch('/chat', {
                     </div>
 
                     <div class='d-flex align-items-center text-end'>
-                    <span onclick="transcribeData('$')" class='textbtn d-flex justify-content-center align-items-center'>
+                    <span onclick="transcribeData('${message.chat}')" class='textbtn d-flex justify-content-center align-items-center'>
                     Transcribe</span>
                     </div>
                     `;
@@ -289,7 +288,7 @@ fetch('/chat', {
                     </div>
 
                     <div class='d-flex align-items-center text-start'>
-                    <span onclick="transcribeData('$')" class='rcvbtn d-flex justify-content-center align-items-center'>
+                    <span onclick="transcribeData('${message.chat}')" class='rcvbtn d-flex justify-content-center align-items-center'>
                     Transcribe</span>
                     </div>
                     `;
@@ -315,14 +314,14 @@ fetch('/chat', {
 });
 }
 
-function transcribeData(buffer) {
+function transcribeData(id) {
     fetch('/transcribe', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            audio: buffer
+            id: id
         })
     })
     .then(response => {

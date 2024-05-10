@@ -166,7 +166,6 @@ function getChatHistory(sender, receiver) {
     // Sort chat history by timestamp
     chatHistory.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    // Extract message content and timestamp, and return as a list
     const formattedChat = chatHistory.map(message => {
         if (message[4] == 0) {
             // Text message
@@ -176,36 +175,13 @@ function getChatHistory(sender, receiver) {
                 timestamp: message[3],
                 type: 'text'
             };
-        } else  { 
-
-              return {
+        } else  {
+            return {
                 sender: message[0],
                 chat: message[2],
                 timestamp: message[3],
                 type: 'audio'
             };
-            
-
-            // Audio file
-            const audioFilePath = path.join('src/audio/', message[2] + '.wav'); // Assuming audio files are stored in 'src/audio' folder with extension '.wav
-            if (fs.existsSync(audioFilePath)) {
-                // Read audio file content
-                const audioContent = fs.readFileSync(audioFilePath, 'utf8'); // Assuming audio file content can be read as text
-                return {
-                    sender: message[0],
-                    chat: audioContent,
-                    type: 'audio',
-                    timestamp: message[3]
-                };
-            } else {
-                // Audio file not found
-                return {
-                    sender: message[0],
-                    chat: 'Audio file not found',
-                    type: 'audio',
-                    timestamp: message[3]
-                };
-            }
         }
     });
     return formattedChat;
@@ -220,48 +196,9 @@ app.post('/chat', (req, res) => {
  
 app.post('/transcribe', (req, res) => {
 
-    // incoming message.chat is buffer object
-    const filePath = 'audio.wav';
-    saveBufferToWav(req.body.audio, 44100, 1, 16, filePath);
-
-
-    data = transcribe(req.body.audio);
-    console.log(data);
-    res.send(data);
+    file = "src/audio/" + req.body.id + '.wav';
+    const text = transcribe(file);
+    res.json({ text });
 });
 
 
-
-
-function generateWavHeader(sampleRate, numChannels, bitsPerSample, dataLength) {
-    const header = Buffer.alloc(44);
-  
-    // RIFF chunk descriptor
-    header.write('RIFF', 0);
-    header.writeUInt32LE(36 + dataLength, 4); // File size - 8 (36 bytes for format)
-    header.write('WAVE', 8);
-
-    // Format chunk
-    header.write('fmt ', 12);
-    header.writeUInt32LE(16, 16); // Length of format chunk (16 bytes)
-    header.writeUInt16LE(1, 20); // PCM format
-    header.writeUInt16LE(numChannels, 22);
-    header.writeUInt32LE(sampleRate, 24);
-    header.writeUInt32LE(sampleRate * numChannels * (bitsPerSample / 8), 28); // Byte rate
-    header.writeUInt16LE(numChannels * (bitsPerSample / 8), 32); // Block align
-    header.writeUInt16LE(bitsPerSample, 34);
-
-    // Data chunk
-    header.write('data', 36);
-    header.writeUInt32LE(dataLength, 40); // Data length
-
-    return header;
-}
-
-function saveBufferToWav(bufferArray, sampleRate, numChannels, bitsPerSample, filePath) {
-    const dataLength = bufferArray.length;
-    const header = generateWavHeader(sampleRate, numChannels, bitsPerSample, dataLength);
-    const wavBuffer = Buffer.concat([header, bufferArray]);
-
-    fs.writeFileSync(filePath, wavBuffer);
-}
