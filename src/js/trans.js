@@ -2,7 +2,7 @@ const fs = require("fs");
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 
 // This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
-const speechConfig = sdk.SpeechConfig.fromSubscription('9ea542b8a4564cab893b5b8d71d43564','eastus');
+const speechConfig = sdk.SpeechConfig.fromSubscription('','');
 speechConfig.speechRecognitionLanguage = "en-US";
 
 function transcribe(filename) {

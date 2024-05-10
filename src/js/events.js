@@ -6,7 +6,7 @@ function saveMessage(sender, receiver, message, type) {
         fs.writeFileSync('messages.json', '[]');
     }
 
-    if (type == 1){
+    if (type == 1){ 
         audioId = Math.random().toString(36).substring(7);
         fs.writeFileSync('src/audio/'+audioId+'.wav', message);
         message = audioId;
