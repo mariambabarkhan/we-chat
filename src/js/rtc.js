@@ -1,3 +1,4 @@
+
 newMessageusers = [];
 
 function establishConnection() {
@@ -168,12 +169,25 @@ function updateUsers(users){
             }
             
             document.getElementById('username').innerText = element;
+
             document.getElementById('videoCall').onclick = () => {
-            window.location.href = `video.html?username=${me}&reciever=${element}`;
-            }
-            
-            establishConnection();
-        });
+                
+                document.getElementById('videocallername').innerText = element;
+                document.getElementById('videoAlert').hidden = false;
+                document.getElementById('videobtnsH').hidden = true;
+                document.getElementById('videotxtH').hidden = false;
+                document.getElementById('videotxtcall').innerText = "Outgoing Video Call...";
+
+                initiateVideoCall(element);
+                window.location.href = `video.html?username=${me}&reciever=${element}&mode=0`;
+        }
+
+
+
+        establishConnection();
+        
+    });
+        checkForVideoCallNotifications(me);
         chatslistarea.appendChild(div);
     }   
 }
@@ -185,6 +199,71 @@ input.addEventListener('keypress', function (e) {
         document.getElementById('SendBtn').click();
     }
 });
+
+
+
+// When the user clicks on the video call option
+function initiateVideoCall(element) {
+    fetch('/send-video-notification', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ receiver: element ,  sender: me})
+    })
+    .then(response => {
+        console.log(response);
+        if (response.ok) {
+            console.log('Video call notification sent successfully.');
+        } else if(response.status === 400){
+            document.getElementById('videoAlert').hidden = true;
+        } else {
+            console.error('Failed to send video call notification.');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending video call notification:', error);
+    });
+}
+
+
+
+// Periodically check for video call notifications
+function checkForVideoCallNotifications(me) {
+    setInterval(() => {
+        fetch(`/check-video-notifications?receiver=${me}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.notification && data.receiver === me) {
+                // Display the notification to the user
+                document.getElementById('videoAlert').hidden = false;
+                document.getElementById('videobtnsH').hidden = false;
+                document.getElementById('videotxtcall').innerText = "Incoming video call...";
+                document.getElementById('videotxtH').hidden = true;
+                document.getElementById('videocallername').innerText = data.sender;
+                document.getElementById('acceptCall').onclick = () => {
+                    document.getElementById('videoAlert').hidden = true;
+                    window.location.href = `video.html?username=${me}&reciever=${data.sender}&mode=1`;
+                }
+                document.getElementById('rejectCall').onclick = () => {
+                    document.getElementById('videoAlert').hidden = true;
+                    fetch('/reject-call', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ receiver: data.receiver, sender: data.sender })
+                    })
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for video call notifications:', error);
+        });
+    }, 3000); // Poll every 5 seconds (adjust as needed)
+}
+
+
 
 function sendMessage() {
     const text = input.value;

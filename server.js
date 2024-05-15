@@ -238,3 +238,65 @@ app.post('/transcribe', (req, res) => {
 });
 
 
+let videoCallNotifications = [];
+
+app.post('/send-video-notification', (req, res) => {
+    const receiver  = req.body.receiver;
+    const sender = req.body.sender;
+    // push sender and receiver to videoCallNotifications
+    videoCallNotifications.push({sender, receiver});
+
+    // for 20 seconds, check if the receiver has accepted the call by checking notifications
+    // if the receiver has not accepted the call, remove the notification
+
+    setTimeout(() => {
+        // check if notification is removed
+        let notificationExists = false;
+        for (let i = 0; i < videoCallNotifications.length; i++) {
+            if (videoCallNotifications[i].sender === sender && videoCallNotifications[i].receiver === receiver) {
+                notificationExists = true;
+            }
+        }
+        if (!notificationExists) {
+            res.status(400).send('Call rejected');
+        }
+        
+    }, 1000);
+
+    setTimeout(() => {
+        for (let i = 0; i < videoCallNotifications.length; i++) {
+            if (videoCallNotifications[i].sender === sender && videoCallNotifications[i].receiver === receiver) {
+                videoCallNotifications = videoCallNotifications.filter(item => item !== videoCallNotifications[i]);
+            }
+        }
+    }, 10000);
+
+    res.sendStatus(200);
+});
+
+// Route to check for video call notifications
+app.get('/check-video-notifications', (req, res) => {
+    const receiver = req.query.receiver;
+    for (let i = 0; i < videoCallNotifications.length; i++) {
+        if (videoCallNotifications.length > 0 && videoCallNotifications[i].receiver === receiver) {
+            res.json({ notification: true , sender: videoCallNotifications[i].sender, receiver: receiver});
+            // Remove the notification after it's been retrieved
+            videoCallNotifications = videoCallNotifications.filter(item => item !== receiver);
+        }
+    }
+    res.json({ notification: false , sender: null, receiver: null});
+});
+
+
+app.post('/reject-call', (req, res) => {
+    const sender = req.body.sender;
+    const receiver = req.body.receiver;
+    
+    for (let i = 0; i < videoCallNotifications.length; i++) {
+        if (videoCallNotifications[i].sender === sender && videoCallNotifications[i].receiver === receiver) {
+            videoCallNotifications = videoCallNotifications.filter(item => item !== videoCallNotifications[i]);
+        }
+    }
+
+    res.sendStatus(200);
+});
