@@ -130,6 +130,11 @@ function updateUsers(users){
 
     chatslistarea = document.querySelector('.chatslistarea');
     chatslistarea.innerHTML = '';
+    if (users.length === 1) {
+        return;
+    }
+
+
     for (let i = 0; i < users.length; i++) { 
         const element = users[i];
         if (element === me) {
@@ -152,16 +157,20 @@ function updateUsers(users){
         div.addEventListener('click', () => {
             document.querySelectorAll(".hidden-true").forEach((e) => {
                 e.hidden = false;
+                document.getElementById('videoCall').hidden = false;
                 document.querySelector('.chatbox').innerHTML = '';
                 fetchChat(element, me);
             });
-
+            
             if (div.classList.contains('newmsg')) {
                 div.classList.remove('newmsg');
                 newMessageusers = newMessageusers.filter(user => user !== element);
             }
-
+            
             document.getElementById('username').innerText = element;
+            document.getElementById('videoCall').onclick = () => {
+            window.location.href = `video.html?username=${me}&reciever=${element}`;
+            }
             
             establishConnection();
         });
@@ -209,6 +218,8 @@ function fetchActiveUsers() {
     }
 setInterval(fetchActiveUsers, 1000);
 
+
+
 function fetchChat(receiver, sender) {
 fetch('/chat', {
     method: 'POST',
@@ -234,6 +245,7 @@ fetch('/chat', {
         if (message.sender === sender) { // Check if the sender matches the receiver
             // check if blob
             if (message.type === 'audio') {
+
                 // decode the audio data
                 audio = new Uint8Array(message.chat);
                 audio = new TextDecoder().decode(audio);
@@ -249,9 +261,9 @@ fetch('/chat', {
                     <div class='date mt-3'>${new Date(message.timestamp).toLocaleTimeString()}</div>
                     </span>
                     </div>
-
+                    
                     <div class='d-flex align-items-center text-end'>
-                    <span onclick="transcribeData('${message.chat}')" class='textbtn d-flex justify-content-center align-items-center'>
+                    <span id='btn_${message.chat}' onclick="transcribeData('${message.chat}')" class='textbtn d-flex justify-content-center align-items-center'>
                     Transcribe</span>
                     </div>
                     `;
@@ -286,9 +298,8 @@ fetch('/chat', {
                     <div class='date2 mt-3'>${new Date(message.timestamp).toLocaleTimeString()}</div>
                     </span>
                     </div>
-
                     <div class='d-flex align-items-center text-start'>
-                    <span onclick="transcribeData('${message.chat}')" class='rcvbtn d-flex justify-content-center align-items-center'>
+                    <span id="btn_${message.chat}" onclick="transcribeData('${message.chat}')" class='rcvbtn d-flex justify-content-center align-items-center'>
                     Transcribe</span>
                     </div>
                     `;
@@ -314,8 +325,109 @@ fetch('/chat', {
 });
 }
 
-function transcribeData(id) {
-    fetch('/transcribe', {
+let isRecording = false;
+
+function recordAudio() {
+        const recognition = new webkitSpeechRecognition();
+        
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1; 
+      
+        recognition.onresult = event => {
+            const transcript = event.results[0][0].transcript;
+            addTranscript(transcript);
+        };
+    
+        recognition.onerror = event => {
+            console.error("Error occurred:", event.error);
+        };
+    
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    const mediaRecorder = new MediaRecorder(stream);
+                    let chunks = [];
+    
+                    mediaRecorder.ondataavailable = event => {
+                        chunks.push(event.data);
+                    };
+    
+                    mediaRecorder.onstop = () => {
+                        const recordedBlob = new Blob(chunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        
+                        // Display the audio player and transcribe button
+                        document.querySelector('.chatbox').innerHTML += `
+                            <div class='d-flex align-items-center text-end'>
+                            <span class='textmsg d-flex justify-content-center align-items-center'>
+                            <audio controls>
+                            <source src="${audioUrl}" type="audio/webm">
+                            Your browser does not support the audio element.
+                            </audio>
+                            <div class='date mt-3'>${new Date().toLocaleTimeString()}</div>
+                            </span>
+                            </div>
+                            
+                            <div class='d-flex align-items-center text-end'>
+                            <span onclick="transcribeData()" class='textbtn d-flex justify-content-center align-items-center'>
+                            Transcribe</span>
+                            </div>
+                        `;
+                        document.querySelector('.chatbox').scrollTo(0, document.querySelector('.chatbox').scrollHeight);
+    
+                        handleRecordedAudio(recordedBlob);
+                    };
+    
+                    // Start recording
+                    mediaRecorder.start();
+                    
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 5000);
+                })
+                .catch(err => {
+                    console.error('The following getUserMedia error occurred:', err);
+                });
+        } else {
+            console.error('getUserMedia not supported on your browser!');
+        }
+        recognition.start();
+}
+
+function handleRecordedAudio(blob) {
+    socket = io('/stream');
+    socket.emit('chat', {
+        msg: blob,
+        reciever: reciever,
+        sender: sender,
+        type:1,
+    });
+}
+
+function addTranscript(transcript) {
+    setTimeout(function() {
+        executeAddTranscript(transcript);
+    }, 1000);
+}
+
+function executeAddTranscript(transcript) {
+
+    fetch('/addTranscribe', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            transcript: transcript,
+            sender: sender,
+            receiver: reciever
+        })
+    })
+}
+
+
+function transcribeData(id){
+    fetch('/transcribe',    {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -324,16 +436,14 @@ function transcribeData(id) {
             id: id
         })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to transcribe audio');
-        }
-        return response.json();
+    .then(response => response.json())  // Correctly handle the promise
+    .then(data => {  // Now 'data' contains the resolved value
+        const transcriptId = 'btn_' + id;
+        const transcriptDiv = document.getElementById(transcriptId);
+        transcriptDiv.innerText = data.transcript;
+        // set width
+        transcriptDiv.style.width = '70%';
+        transcriptDiv.onclick = null;
     })
-    .then(data => {
-        console.log(data);
-    })
-    .catch(error => {
-        console.error(error);
-    });
+    .catch(error => console.error('Error:', error));
 }

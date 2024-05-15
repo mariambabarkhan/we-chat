@@ -7,7 +7,7 @@ let stream = require( './src/js/stream' );
 let path = require( 'path' );
 let favicon = require( 'serve-favicon' );
 
-let transcribe = require('./src/js/trans.js');
+// let transcribe = require('./src/js/trans.js');
 const { type } = require('os');
 
 app.use('/audiofile', express.static('src/audio'));
@@ -190,15 +190,51 @@ function getChatHistory(sender, receiver) {
 app.post('/chat', (req, res) => {
     const { sender, receiver } = req.body;
     const messages = getChatHistory(sender, receiver);
+    if (messages.length === 0) {
+        res.json({ error: 'No chat history found' });
+    }
     res.json({ messages });
 });
 
- 
+app.post('/addTranscribe', (req, res) => {
+    let givenSender = req.body.sender;
+    let givenReceiver = req.body.receiver;
+    let transcript = req.body.transcript;
+    
+    let msgs = JSON.parse(fs.readFileSync('messages.json'));
+    let latestTimestamp = msgs[0][3];
+
+    msgs.forEach(msg => {
+        const sender = msg[0];    // Assuming the sender is at index 1
+        const receiver = msg[1];  // Assuming the receiver is at index 2
+        const timestamp = msg[3]; // Assuming the timestamp is at index 3
+
+        
+        // Check if the current message is between the given sender and receiver
+        if (sender === givenSender && receiver === givenReceiver) {
+            
+            if (timestamp > latestTimestamp) {
+                console.log(timestamp, sender, receiver);
+                latestTimestamp = timestamp;
+                latestMsg = msg;
+            }
+        }
+    });
+
+    latestMsg.push(transcript);
+    fs.writeFileSync('messages.json', JSON.stringify(msgs));
+    res.json({success: 'Transcript added successfully'});
+});
+
 app.post('/transcribe', (req, res) => {
 
-    file = "src/audio/" + req.body.id + '.wav';
-    const text = transcribe(file);
-    res.json({ text });
+    id = req.body.id;
+    msgs = JSON.parse(fs.readFileSync('messages.json'));
+
+    let audioMsg = msgs.filter(msg => msg[2] == id);
+    transcript = audioMsg[0][5]
+    res.json({transcript: transcript});
+
 });
 
 

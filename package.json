@@ -8,6 +8,7 @@
     "microsoft-cognitiveservices-speech-sdk": "^1.36.0",
     "mysql": "^2.18.1",
     "serve-favicon": "^2.5.0",
+    "simple-peer": "^9.11.1",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P Video Chat</title>
+</head>
+<body>
+  <h1>P2P Video Chat</h1>
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
+  <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+
+
+  <script src="https://unpkg.com/peerjs@1.5.3/dist/peerjs.min.js"></script>
+  <script>
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const connectButton = document.getElementById('connectButton');
+
+    let localStream;
+    let peer;
+
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    const localIdFromUrl = getUrlParameter('username');
+    const remoteIdFromUrl = getUrlParameter('reciever');
+
+    if (localIdFromUrl) {
+      initializePeer(localIdFromUrl);
+    }
+
+    function initializePeer(localId) {
+      peer = new Peer(localId);
+      setupPeerEvents();
+    }
+
+    function setupPeerEvents() {
+      peer.on('open', function(id) {
+        console.log('My peer ID is: ' + id);
+      });
+
+      peer.on('call', function(call) {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+          .then(stream => {
+            call.answer(stream); // Answer the call with an A/V stream.
+            localStream = stream;
+            localVideo.srcObject = stream;
+            console.log('Answered the call');
+            call.on('stream', remoteStream => {
+              remoteVideo.srcObject = remoteStream;
+              drawToCanvas(remoteStream);
+            });
+          })
+          .catch(err => {
+            console.error('Failed to get local stream', err);
+          });
+      });
+    }
+
+  if (remoteIdFromUrl) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+          localStream = stream;
+          localVideo.srcObject = stream;
+
+          const call = peer.call(remoteIdFromUrl, stream);
+          call.on('stream', remoteStream => {
+            remoteVideo.srcObject = remoteStream;
+            drawToCanvas(remoteStream);
+          });
+        })
+        .catch(err => {
+          console.error('Failed to get local stream', err);
+        });
+    } else {
+      alert('Please enter the remote peer ID.');
+    }
+
+    function drawToCanvas(stream) {
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+      const videoElement = document.createElement('video');
+      videoElement.srcObject = stream;
+      videoElement.play();
+
+      videoElement.addEventListener('play', function() {
+        function drawFrame() {
+          context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+          requestAnimationFrame(drawFrame);
+        }
+        drawFrame();
+      });
+    }
+  </script>
+</body>
+</html>
