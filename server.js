@@ -17,9 +17,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use( favicon( path.join( __dirname, './src/images/magic.png' ) ) );
 app.use(express.static(__dirname + '/src'));
-app.get("*", (req,res) => {
-    res.sendFile(path.resolve(__dirname,"src","index.html"))
-});
 
 app.get( '/', ( req, res ) => {
     res.sendFile( __dirname + '/src/index.html' );
