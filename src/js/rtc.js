@@ -1,4 +1,3 @@
-
 newMessageusers = [];
 
 function establishConnection() {
@@ -181,11 +180,7 @@ function updateUsers(users){
                 initiateVideoCall(element);
                 window.location.href = `video.html?username=${me}&reciever=${element}&mode=0`;
         }
-
-
-
         establishConnection();
-        
     });
         checkForVideoCallNotifications(me);
         chatslistarea.appendChild(div);
@@ -243,7 +238,7 @@ function checkForVideoCallNotifications(me) {
                 document.getElementById('videocallername').innerText = data.sender;
                 document.getElementById('acceptCall').onclick = () => {
                     document.getElementById('videoAlert').hidden = true;
-                    window.location.href = `video.html?username=${me}&reciever=${data.sender}&mode=1`;
+                    window.location.href = `video.html?username=${me}&reciever=${data.sender}&mode=0`;
                 }
                 document.getElementById('rejectCall').onclick = () => {
                     document.getElementById('videoAlert').hidden = true;
@@ -281,22 +276,27 @@ function sendMessage() {
 
 
 function fetchActiveUsers() {
-        fetch('/active-users')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch active users');
-            }
-            return response.json();
+    fetch('/active-users', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'json',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+        }
+    })
+    .then(response => {
+        return response.json();
+        }
+    )
+    .then(data => {
+        updateUsers(data.activeUsers);
         })
-        .then(data => {
-            updateUsers(data.activeUsers);
-            })
-        .catch(error => {
-            console.error(error);
-        });
-    }
+    .catch(error => {
+        console.error(error);
+    });
+}
 setInterval(fetchActiveUsers, 1000);
-
 
 
 function fetchChat(receiver, sender) {
@@ -400,7 +400,7 @@ fetch('/chat', {
     }
 })
 .catch(error => {
-    console.error(error);
+    console.error('Error:', error);
 });
 }
 

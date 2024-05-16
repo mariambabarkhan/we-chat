@@ -128,22 +128,25 @@ footerCode=`
 `
 
 document.addEventListener('DOMContentLoaded', () => {
-  const scrollToTopButton = document.querySelector('.triangle-up');
-  scrollToTopButton.addEventListener('click', () => {
-    // Scroll to top smoothly
-    window.scrollTo({
+  if (document.querySelector('.triangle-up') != null){
+    const scrollToTopButton = document.querySelector('.triangle-up');
+    scrollToTopButton.addEventListener('click', () => {
+      // Scroll to top smoothly
+      window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   });
+}
 });
 
 
 navbar = document.querySelector('.navbar');
 navbar.innerHTML+=navBarCode;
 
-
-document.querySelector('footer').innerHTML+=footerCode;
+if(document.querySelector('footer') != null){
+  document.querySelector('footer').innerHTML+=footerCode;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   var errorMessage = document.querySelector('.alert');

@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use( favicon( path.join( __dirname, './src/images/magic.png' ) ) );
 app.use(express.static(__dirname + '/src'));
-app.get("*", (req,res) => {
+app.get("/", (req,res) => {
     res.sendFile(path.resolve(__dirname,"src","index.html"))
 });
 
@@ -52,7 +52,6 @@ app.post('/submit-login', (req, res) => {
         updateUserStatusAndNotify(username, 'active');
         // redirect to options page with username
         res.status(200).send("Login successful");
-
     }
 
 });
@@ -161,6 +160,9 @@ function getChatHistory(sender, receiver) {
     if (fs.existsSync('messages.json')) {
         messages = JSON.parse(fs.readFileSync('messages.json'));
     }
+    else{
+        messages = JSON.parse(fs.readFileSync('backup/backup.json'));
+    }
     const chatHistory = messages.filter(message =>
         (message[0] === sender && message[1] === receiver) ||
         (message[0] === receiver && message[1] === sender)
@@ -193,8 +195,9 @@ function getChatHistory(sender, receiver) {
 app.post('/chat', (req, res) => {
     const { sender, receiver } = req.body;
     const messages = getChatHistory(sender, receiver);
-    if (messages.length === 0) {
+    if (messages == undefined) {
         res.json({ error: 'No chat history found' });
+        return;
     }
     res.json({ messages });
 });
@@ -204,7 +207,13 @@ app.post('/addTranscribe', (req, res) => {
     let givenReceiver = req.body.receiver;
     let transcript = req.body.transcript;
     
-    let msgs = JSON.parse(fs.readFileSync('messages.json'));
+    if (fs.existsSync('messages.json')) {
+        let msgs = JSON.parse(fs.readFileSync('messages.json'));
+    }
+    else{
+        let msgs = JSON.parse(fs.readFileSync('backup/backup.json'));
+    }
+
     let latestTimestamp = msgs[0][3];
 
     msgs.forEach(msg => {
@@ -226,13 +235,19 @@ app.post('/addTranscribe', (req, res) => {
 
     latestMsg.push(transcript);
     fs.writeFileSync('messages.json', JSON.stringify(msgs));
+    fs.writeFileSync('backup/backup.json', JSON.stringify(msgs));
     res.json({success: 'Transcript added successfully'});
 });
 
 app.post('/transcribe', (req, res) => {
 
     id = req.body.id;
-    msgs = JSON.parse(fs.readFileSync('messages.json'));
+    if (fs.existsSync('messages.json')) {
+        msgs = JSON.parse(fs.readFileSync('messages.json'));
+    }
+    else{
+    msgs = JSON.parse(fs.readFileSync('backup/backup.json'));
+    }
 
     let audioMsg = msgs.filter(msg => msg[2] == id);
     transcript = audioMsg[0][5]
@@ -280,14 +295,17 @@ app.post('/send-video-notification', (req, res) => {
 // Route to check for video call notifications
 app.get('/check-video-notifications', (req, res) => {
     const receiver = req.query.receiver;
+    x = 0;
     for (let i = 0; i < videoCallNotifications.length; i++) {
         if (videoCallNotifications.length > 0 && videoCallNotifications[i].receiver === receiver) {
             res.json({ notification: true , sender: videoCallNotifications[i].sender, receiver: receiver});
-            // Remove the notification after it's been retrieved
+            x = 1;
             videoCallNotifications = videoCallNotifications.filter(item => item !== receiver);
         }
     }
-    res.json({ notification: false , sender: null, receiver: null});
+    if (x == 0){
+        res.json({ notification: false , sender: null, receiver: null});
+    }
 });
 
 
