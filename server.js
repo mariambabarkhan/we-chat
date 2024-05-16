@@ -27,7 +27,10 @@ app.get( '/', ( req, res ) => {
 
 io.of( '/stream' ).on( 'connection', stream );
 
-server.listen( 3000 );
+server.listen(process.env.PORT || 3000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 3000}`);
+});
+
 let activeUsers = [];
 
 app.post('/submit-login', (req, res) => {
