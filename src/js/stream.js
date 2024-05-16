@@ -12,6 +12,11 @@ const stream = (socket) => {
             socket.to(data.reciever).emit('chatback', { reciever: data.reciever, msg: data.msg, sender: data.sender});
         }
     });
+
+    socket.on('video', (data) => {
+        socket.to(data.reciever).emit('videoback', { reciever: data.reciever, sender: data.sender });
+    }
+    );
 };
 
 module.exports = stream;

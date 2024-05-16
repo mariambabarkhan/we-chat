@@ -345,6 +345,14 @@ html{
   margin: 10px;
 }
 
+.videopic{
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+    border-radius: 100%;
+    margin: 10px; 
+}
+
 .chatlistitem{
   border-radius: 15px;
 }
@@ -398,6 +406,8 @@ html{
   padding: 10px;
   margin: 3px 30px;
   color: #fff;
+  max-width: 60%;
+  text-align: left;
 }
 
 .rcvmsg{
@@ -406,7 +416,8 @@ html{
   padding: 10px;
   margin: 3px 30px;
   color: #000;
-
+  max-width: 60%;
+  text-align: left;
 }
 
 
@@ -476,4 +487,78 @@ html{
 .currentuser{
   background-color: #dfdfdf;
   color: #000;
+}
+
+.red{
+  background-color: red;
+}
+
+.red:hover{
+  background-color: #b80000;
+}
+
+#videoAlert{
+  width: 30vw;
+  height: 45vh;
+  background-color: #f2f2f2;
+  border-radius: 15px;
+  position: absolute;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  left: 65%;
+  top: 15%;
+}
+
+#localVideo{
+  width: 300px;
+  height: 200px;
+  border-radius: 15px;
+  border-radius: 10px;
+  position: absolute;
+  top: 54%;
+  left: 63%;
+}
+
+#remoteVideo{
+  border-radius: 10px;
+  position: absolute;
+  top: 20%;
+  height: 420px;
+  left: 20%;
+}
+
+.btncont{
+  color: white;
+  padding: 10px;
+  position: absolute;
+  top: 75%;
+  left: 36%;
+}
+
+.btncont button{
+  height: 40px;
+  width: 40px;
+  border-radius: 100%;
+}
+
+.btncont button:hover{
+  background-color: transparent;
+}
+
+#svg3{
+  fill: white;
+  height: 20px;
+  transform: translate(-4px, -1px);
+}
+
+#svg3:hover{
+  fill: #cdcdcd;
+}
+
+#hangup svg{
+  transform: rotate(-135deg)translate(3px, -3px);
+}
+
+.green{
+  background-color: #00a08b;
 }
