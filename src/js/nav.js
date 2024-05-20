@@ -69,7 +69,10 @@ footerCode=`
                   d="M14.122,12.546l9.134-9.135A4.986,4.986,0,0,0,19,1H5A4.986,4.986,0,0,0,.744,3.411l9.134,9.135A3.007,3.007,0,0,0,14.122,12.546Z" />
           </svg>
         </div>
-          <h6 class='mx-4 my-2'>mujtabashafqat0@gmail.com</h6>
+          <h6 class='mx-4 my-2'>Mujtaba Shafqat</h6>
+          <h6 class='mx-4 my-2'>Mariam Babar Khan</h6>
+          <h6 class='mx-4 my-2'>Hina Naeem</h6>
+
       </div>
 
       <div class="d-flex my-2">
