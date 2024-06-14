@@ -1,5 +1,7 @@
 newMessageusers = [];
-
+import { inject } from '@vercel/analytics';
+ 
+inject();
 function establishConnection() {
     let socket = io('/stream');
     var socketId = '';
