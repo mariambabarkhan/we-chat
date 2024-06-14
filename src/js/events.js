@@ -1,7 +1,5 @@
 const fs = require('fs');
-import { inject } from '@vercel/analytics';
- 
-inject();
+
 // Define the saveMessage function
 function saveMessage(sender, receiver, message, type) {
     if (!fs.existsSync('messages.json')) {

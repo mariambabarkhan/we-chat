@@ -1,7 +1,5 @@
 const saveMessage = require('./events.js');
-import { inject } from '@vercel/analytics';
- 
-inject();
+
 const stream = (socket) => {
     socket.on('subscribe', (data) => {
         socket.join(data.sender);
