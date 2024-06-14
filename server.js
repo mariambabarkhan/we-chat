@@ -5,7 +5,6 @@ let server = require( 'http' ).Server( app );
 let io = require( 'socket.io' )( server );
 let stream = require( './src/js/stream' );
 let path = require( 'path' );
-// let favicon = require( 'serve-favicon' );
 
 const { type } = require('os');
 
@@ -14,7 +13,6 @@ app.use('/audiofile', express.static('src/audio'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// app.use( favicon( path.join( __dirname, './src/images/magic.png' ) ) );
 app.use(express.static(__dirname + '/src'));
 app.get("/", (req,res) => {
     res.sendFile(path.resolve(__dirname,"src","index.html"))
