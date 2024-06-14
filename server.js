@@ -7,7 +7,6 @@ let stream = require( './src/js/stream' );
 let path = require( 'path' );
 let favicon = require( 'serve-favicon' );
 
-// let transcribe = require('./src/js/trans.js');
 const { type } = require('os');
 
 app.use('/audiofile', express.static('src/audio'));
@@ -27,9 +26,18 @@ app.get( '/', ( req, res ) => {
 
 io.of( '/stream' ).on( 'connection', stream );
 
-server.listen(process.env.PORT || 3000, () => {
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something went wrong!');
+  });
+  
+  app.listen(process.env.PORT || 3000, () => {
     console.log(`Server is running on port ${process.env.PORT || 3000}`);
-});
+  });
+
+// server.listen(process.env.PORT || 3000, () => {
+//     console.log(`Server is running on port ${process.env.PORT || 3000}`);
+// });
 
 let activeUsers = [];
 
